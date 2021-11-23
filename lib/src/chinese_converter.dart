@@ -33,12 +33,12 @@ class ChineseConverter {
   ///
   /// You can pass the [inBackground] parameter if you want to create native
   /// threads while doing text conversion.
-  static Future<String> convert(
+  static Future<String?> convert(
     String text,
     ConverterOption option, {
     bool inBackground = false,
   }) async {
-    final String result =
+    final String? result =
         await _channel.invokeMethod('convert', [text, option.id, inBackground]);
     return result;
   }
