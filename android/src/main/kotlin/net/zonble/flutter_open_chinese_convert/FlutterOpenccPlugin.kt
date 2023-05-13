@@ -1,5 +1,6 @@
 package net.zonble.flutter_open_chinese_convert
 
+import androidx.annotation.NonNull
 import android.content.Context
 import com.zqc.opencc.android.lib.ChineseConverter
 import com.zqc.opencc.android.lib.ConversionType
@@ -8,17 +9,22 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
+import io.flutter.embedding.engine.plugins.FlutterPlugin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 
-class FlutterOpenccPlugin(val context: Context) : MethodCallHandler {
-  companion object {
-    @JvmStatic
-    fun registerWith(registrar: Registrar) {
-      val context = registrar.activeContext()
-      val channel = MethodChannel(registrar.messenger(), "flutter_open_chinese_convert")
-      channel.setMethodCallHandler(FlutterOpenccPlugin(context))
-    }
+class FlutterOpenccPlugin: FlutterPlugin, MethodCallHandler {
+  private lateinit var channel : MethodChannel
+  private lateinit var context: Context
+
+  override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_open_chinese_convert")
+    channel.setMethodCallHandler(this)
+    context = flutterPluginBinding.applicationContext
+  }
+
+  override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+    channel.setMethodCallHandler(null)
   }
 
   private var job: Job? = null
@@ -37,7 +43,7 @@ class FlutterOpenccPlugin(val context: Context) : MethodCallHandler {
     else -> null
   }
 
-  override fun onMethodCall(call: MethodCall, result: Result) {
+  override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
     when (call.method) {
       "convert" -> {
         val arguments = call.arguments as? ArrayList<*>
@@ -62,6 +68,15 @@ class FlutterOpenccPlugin(val context: Context) : MethodCallHandler {
     }
   }
 
+  companion object {
+    @JvmStatic
+    fun registerWith(registrar: Registrar) {
+      val context = registrar.activeContext()
+      val channel = MethodChannel(registrar.messenger(), "flutter_open_chinese_convert")
+      channel.setMethodCallHandler(FlutterOpenccPlugin())
+    }
+  }
+
   private suspend fun convert(text: String, option: ConversionType, result: Result) {
     withContext(IO) {
       val converted = ChineseConverter.convert(text, option, context)
@@ -70,5 +85,4 @@ class FlutterOpenccPlugin(val context: Context) : MethodCallHandler {
       }
     }
   }
-
 }
