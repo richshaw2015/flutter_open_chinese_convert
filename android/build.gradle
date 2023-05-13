@@ -18,9 +18,7 @@ rootProject.allprojects {
     repositories {
         google()
         jcenter()
-        maven {
-            maven { url 'https://jitpack.io' }
-        }
+        maven { url 'https://jitpack.io' }
     }
 }
 
